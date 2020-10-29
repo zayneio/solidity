@@ -5,6 +5,7 @@ Language Features:
 
 Compiler Features:
  * Low-Level Inliner: Inline ordinary jumps to small blocks and jumps to small blocks that terminate.
+ * References Resolver: Detect circular references to other contracts across libraries and free functions
 
 
 Bugfixes:
