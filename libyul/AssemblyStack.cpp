@@ -217,6 +217,28 @@ MachineAssemblyObject AssemblyStack::assemble(Machine _machine) const
 	return MachineAssemblyObject();
 }
 
+namespace
+{
+
+// Duplicated from libsolidity/codegen/CompilerContext.cpp
+// TODO: refactor and remove duplication
+evmasm::Assembly::OptimiserSettings translateOptimiserSettings(solidity::frontend::OptimiserSettings const& _settings, langutil::EVMVersion _evmVersion)
+{
+	// Constructing it this way so that we notice changes in the fields.
+	evmasm::Assembly::OptimiserSettings asmSettings{false, false, false, false, false, false, _evmVersion, 0};
+	asmSettings.isCreation = true;
+	asmSettings.runJumpdestRemover = _settings.runJumpdestRemover;
+	asmSettings.runPeephole = _settings.runPeephole;
+	asmSettings.runDeduplicate = _settings.runDeduplicate;
+	asmSettings.runCSE = _settings.runCSE;
+	asmSettings.runConstantOptimiser = _settings.runConstantOptimiser;
+	asmSettings.expectedExecutionsPerDeployment = _settings.expectedExecutionsPerDeployment;
+	asmSettings.evmVersion = _evmVersion;
+	return asmSettings;
+}
+
+}
+
 std::pair<MachineAssemblyObject, MachineAssemblyObject> AssemblyStack::assembleWithDeployed(optional<string_view> _deployName) const
 {
 	yulAssert(m_analysisSuccessful, "");
@@ -227,6 +249,9 @@ std::pair<MachineAssemblyObject, MachineAssemblyObject> AssemblyStack::assembleW
 	evmasm::Assembly assembly;
 	EthAssemblyAdapter adapter(assembly);
 	compileEVM(adapter, m_optimiserSettings.optimizeStackAllocation);
+
+	evmasm::Assembly::OptimiserSettings settings = translateOptimiserSettings(m_optimiserSettings, m_evmVersion);
+	assembly.optimise(settings);
 
 	MachineAssemblyObject creationObject;
 	creationObject.bytecode = make_shared<evmasm::LinkerObject>(assembly.assemble());
