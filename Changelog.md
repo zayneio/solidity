@@ -6,6 +6,7 @@ Language Features:
 Compiler Features:
  * Command Line Interface: Drop experimental support for ``--machine evm15``.
  * Optimizer: Try to move ``and`` with constant inside ``or`` to improve storage writes of small types.
+ * Yul Optimizer: If all cases of a ``switch`` statement with a default case start with the same prefix, move that prefix out of the ``switch``.
 
 
 Bugfixes:
