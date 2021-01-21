@@ -102,6 +102,11 @@ ASTNode const* Predicate::programNode() const
 	return m_node;
 }
 
+ContractDefinition const* Predicate::contextContract() const
+{
+	return m_contractContext;
+}
+
 ContractDefinition const* Predicate::programContract() const
 {
 	if (auto const* contract = dynamic_cast<ContractDefinition const*>(m_node))
@@ -151,6 +156,16 @@ bool Predicate::isSummary() const
 bool Predicate::isFunctionSummary() const
 {
 	return m_type == PredicateType::FunctionSummary;
+}
+
+bool Predicate::isFunctionBlock() const
+{
+	return m_type == PredicateType::FunctionBlock;
+}
+
+bool Predicate::isFunctionErrorBlock() const
+{
+	return m_type == PredicateType::FunctionErrorBlock;
 }
 
 bool Predicate::isInternalCall() const
@@ -305,6 +320,21 @@ vector<optional<string>> Predicate::summaryPostOutputValues(vector<smtutil::Expr
 	vector<smtutil::Expression> outValues(first, _args.end());
 	solAssert(outValues.size() == function->returnParameters().size(), "");
 	auto outTypes = FunctionType(*function).returnParameterTypes();
+	return formatExpressions(outValues, outTypes);
+}
+
+vector<optional<string>> Predicate::localVariableValues(vector<smtutil::Expression> const& _args) const
+{
+	/// The signature of a local block predicate is: block(error, this, abiFunctions, cryptoFunctions, txData, preBlockchainState, preStateVars, preInputVars, postBlockchainState, postStateVars, postInputVars, outputVars, localVars).
+	/// Here we are interested in localVars.
+	auto const* function = programFunction();
+	solAssert(function, "");
+
+	auto const& localVars = SMTEncoder::localVariablesIncludingModifiers(*function, m_contractContext);
+	auto first = _args.end() - static_cast<int>(localVars.size());
+	vector<smtutil::Expression> outValues(first, _args.end());
+
+	auto outTypes = applyMap(localVars, [](auto _var) { return _var->type(); });
 	return formatExpressions(outValues, outTypes);
 }
 

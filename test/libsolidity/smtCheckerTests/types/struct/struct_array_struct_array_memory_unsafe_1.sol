@@ -27,8 +27,8 @@ contract C {
 	}
 }
 // ----
-// Warning 6328: (228-245): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (263-282): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (301-321): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (343-366): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
-// Warning 6328: (391-417): CHC: Assertion violation happens here.\nCounterexample:\n\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (228-245): CHC: Assertion violation happens here.\nCounterexample:\n\ns1 = {x: 2, t: {y: 0, a: []}, a: [], ts: []}\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (263-282): CHC: Assertion violation happens here.\nCounterexample:\n\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (301-321): CHC: Assertion violation happens here.\nCounterexample:\n\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (343-366): CHC: Assertion violation happens here.\nCounterexample:\n\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\nTransaction trace:\nC.constructor()\nC.f()
+// Warning 6328: (391-417): CHC: Assertion violation happens here.\nCounterexample:\n\ns1 = {x: 2, t: {y: 3, a: []}, a: [], ts: []}\n\nTransaction trace:\nC.constructor()\nC.f()

@@ -43,6 +43,8 @@ contract C
 		f(array2d[a], array2d[b], array4d[c][c], tinyArray3d[d], array4d[e]);
 	}
 }
+// ====
+// SMTIgnoreCex: yes
 // ----
 // Warning 6328: (468-485): CHC: Assertion violation happens here.
 // Warning 6328: (532-554): CHC: Assertion violation happens here.
