@@ -132,7 +132,10 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		{
 			Json::Value method(devDocumentation(fun->annotation().docTags));
 			// add the function, only if we have any documentation to add
-			Json::Value jsonReturn = extractReturnParameterDocs(fun->annotation().docTags, *fun);
+			Json::Value jsonReturn = extractReturnParameterDocs(
+				fun->annotation().docTags,
+				fun->functionType(false)->returnParameterNames()
+			);
 
 			if (!jsonReturn.empty())
 				method["returns"] = jsonReturn;
@@ -148,9 +151,20 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 		if (auto devDoc = devDocumentation(varDecl->annotation().docTags); !devDoc.empty())
 			stateVariables[varDecl->name()] = devDoc;
 
-		solAssert(varDecl->annotation().docTags.count("return") <= 1, "");
+		auto const assignIfNotEmpty = [&](string const& _name, Json::Value const& _content)
+		{
+			if (!_content.empty())
+				stateVariables[varDecl->name()][_name] = _content;
+		};
+
 		if (varDecl->annotation().docTags.count("return") == 1)
-			stateVariables[varDecl->name()]["return"] = extractDoc(varDecl->annotation().docTags, "return");
+			assignIfNotEmpty("return", extractDoc(varDecl->annotation().docTags, "return"));
+
+		if (FunctionTypePointer functionType = varDecl->functionType(false))
+			assignIfNotEmpty("returns", extractReturnParameterDocs(
+				varDecl->annotation().docTags,
+				functionType->returnParameterNames()
+			));
 	}
 
 	Json::Value events(Json::objectValue);
@@ -167,17 +181,17 @@ Json::Value Natspec::devDocumentation(ContractDefinition const& _contractDef)
 	return doc;
 }
 
-Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, FunctionDefinition const& _functionDef)
+Json::Value Natspec::extractReturnParameterDocs(std::multimap<std::string, DocTag> const& _tags, vector<string> const& _returnParameterNames)
 {
 	Json::Value jsonReturn{Json::objectValue};
 	auto returnDocs = _tags.equal_range("return");
 
-	if (!_functionDef.returnParameters().empty())
+	if (!_returnParameterNames.empty())
 	{
 		size_t n = 0;
 		for (auto i = returnDocs.first; i != returnDocs.second; i++)
 		{
-			string paramName = _functionDef.returnParameters().at(n)->name();
+			string paramName = _returnParameterNames.at(n);
 			string content = i->second.content;
 
 			if (paramName.empty())
