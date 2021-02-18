@@ -31,6 +31,7 @@
 #include <optional>
 #include <stdexcept>
 #include <utility>
+#include <functional>
 
 using namespace std;
 using namespace solidity;
@@ -52,6 +53,8 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	m_lineOffset(m_reader.lineNumber()),
 	m_enforceViaYul(enforceViaYul)
 {
+	initializeBuiltins();
+
 	string choice = m_reader.stringSetting("compileViaYul", "default");
 	if (choice == "also")
 	{
@@ -105,6 +108,21 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 
 	parseExpectations(m_reader.stream());
 	soltestAssert(!m_tests.empty(), "No tests specified in " + _filename);
+}
+
+void SemanticTest::initializeBuiltins()
+{
+	m_builtins["account_balance"] = [this](FunctionCall const& _call) -> std::optional<bytes>
+	{
+	  soltestAssert(_call.arguments.parameters.size() == 1, "Account address expected.");
+	  h160 address = h160(_call.arguments.parameters.at(0).rawString);
+	  return util::toBigEndian(SolidityExecutionFramework::balanceAt(address));
+	};
+	m_builtins["contract_balance"] = [this](FunctionCall const& _call) -> std::optional<bytes>
+	{
+	  soltestAssert(_call.arguments.parameters.empty(), "No arguments expected.");
+	  return util::toBigEndian(SolidityExecutionFramework::balanceAt(m_contractAddress));
+	};
 }
 
 TestCase::TestResult SemanticTest::run(ostream& _stream, string const& _linePrefix, bool _formatted)
