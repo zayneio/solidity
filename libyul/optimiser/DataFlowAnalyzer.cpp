@@ -27,6 +27,7 @@
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
 #include <libyul/Exceptions.h>
+#include <libyul/Utilities.h>
 
 #include <libsolutil/CommonData.h>
 #include <libsolutil/cxx20.h>
@@ -397,6 +398,14 @@ bool DataFlowAnalyzer::inScope(YulString _variableName) const
 	return false;
 }
 
+optional<u256> DataFlowAnalyzer::valueOfIdentifier(YulString const& _name)
+{
+	if (m_value.count(_name))
+		if (Literal const* literal = get_if<Literal>(m_value.at(_name).value))
+			return valueOfLiteral(*literal);
+	return nullopt;
+}
+
 std::optional<pair<YulString, YulString>> DataFlowAnalyzer::isSimpleStore(
 	StoreLoadLocation _location,
 	ExpressionStatement const& _statement
@@ -421,4 +430,3 @@ std::optional<YulString> DataFlowAnalyzer::isSimpleLoad(
 				return key->name;
 	return {};
 }
-

@@ -27,9 +27,19 @@
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/SideEffects.h>
 #include <libyul/AST.h>
+#include <libyul/Utilities.h>
+
+#include <libevmasm/Instruction.h>
+#include <libevmasm/GasMeter.h>
+#include <libsolutil/Keccak256.h>
+
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/take.hpp>
 
 using namespace std;
 using namespace solidity;
+using namespace solidity::util;
+using namespace solidity::evmasm;
 using namespace solidity::yul;
 
 void LoadResolver::run(OptimiserStepContext& _context, Block& _ast)
@@ -38,7 +48,8 @@ void LoadResolver::run(OptimiserStepContext& _context, Block& _ast)
 	LoadResolver{
 		_context.dialect,
 		SideEffectsPropagator::sideEffects(_context.dialect, CallGraphGenerator::callGraph(_ast)),
-		!containsMSize
+		!containsMSize,
+		_context.expectedExecutionsPerDeployment
 	}(_ast);
 }
 
@@ -46,13 +57,31 @@ void LoadResolver::visit(Expression& _e)
 {
 	DataFlowAnalyzer::visit(_e);
 
+	auto isKeccak = [&](YulString const& _name) -> bool
+	{
+		if (auto evmDialect = dynamic_cast<EVMDialect const*>(&m_dialect))
+			if (auto builtin = evmDialect->builtin(_name))
+				return (
+					builtin->instruction &&
+					*builtin->instruction == Instruction::KECCAK256
+				);
+
+		return false;
+	};
+
+
 	if (FunctionCall const* funCall = std::get_if<FunctionCall>(&_e))
+	{
 		for (auto location: { StoreLoadLocation::Memory, StoreLoadLocation::Storage })
 			if (funCall->functionName.name == m_loadFunctionName[static_cast<unsigned>(location)])
 			{
 				tryResolve(_e, location, funCall->arguments);
 				break;
 			}
+
+		if (isKeccak(funCall->functionName.name))
+			tryEvaluateKeccak(_e, funCall->arguments);
+	}
 }
 
 void LoadResolver::tryResolve(
@@ -75,4 +104,63 @@ void LoadResolver::tryResolve(
 		if (auto value = util::valueOrNullptr(m_memory, key))
 			if (inScope(*value))
 				_e = Identifier{locationOf(_e), *value};
+}
+
+void LoadResolver::tryEvaluateKeccak(
+	Expression& _e,
+	std::vector<Expression> const& _arguments
+)
+{
+	// Runtime saving: [PUSH32 32-byte-value] instead of [PUSH1 0 PUSH1 32 KECCAK256]
+	// Saves one KECCAK256 + one PUSH. Currently it is 30 + 6 + 3 = 39
+	bigint runTimeGasSavings = GasCosts::keccak256Gas + GasCosts::keccak256WordGas + GasCosts::tier2Gas;
+	// Deploy time increase
+	// [PUSH32 32-byte-value]: 33 bytes
+	// instead of
+	// [PUSH1 0 PUSH1 32 KECCAK256]: 5 bytes
+	// Increase of 28 bytes.
+	// Current increase: 28 * 200 = 5600, when it's not deploy code.
+	// And increase of 28 * 16 = 448 for deploy code.
+	bigint deployTimeGasLoss =
+		GasMeter::dataGas(
+			28,
+			!m_expectedExecutionsPerDeployment.has_value(),
+			langutil::EVMVersion{}
+		);
+	// We skip if net gas savings are not positive
+	if (!m_expectedExecutionsPerDeployment.has_value())
+	{
+		if (runTimeGasSavings < deployTimeGasLoss)
+			return;
+	}
+	else if (*m_expectedExecutionsPerDeployment * runTimeGasSavings < deployTimeGasLoss)
+		return;
+
+	yulAssert(_arguments.size() == 2, "");
+	Identifier const* memoryKey = std::get_if<Identifier>(&_arguments.at(0));
+	Identifier const* offset = std::get_if<Identifier>(&_arguments.at(1));
+
+	if (!memoryKey || !offset)
+		return;
+
+	if (
+		auto memoryValue = util::valueOrNullptr(m_memory, memoryKey->name);
+		memoryValue &&
+		inScope(*memoryValue)
+	)
+	{
+		optional<u256> memoryContent = valueOfIdentifier(*memoryValue);
+		optional<u256> memoryOffset = valueOfIdentifier(offset->name);
+		if (memoryContent && memoryOffset && *memoryOffset <= 32)
+		{
+			bytes contentAsBytes = toBigEndian(*memoryContent);
+			bytes slicedBytes = contentAsBytes | ranges::views::take(unsigned(*memoryOffset)) | ranges::to<vector>;
+			_e = Literal{
+				locationOf(_e),
+				LiteralKind::Number,
+				YulString{u256(keccak256(slicedBytes)).str()},
+				m_dialect.defaultType
+			};
+		}
+	}
 }
