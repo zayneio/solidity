@@ -36,8 +36,8 @@ string TestFunctionCall::format(
 	ErrorReporter& _errorReporter,
 	string const& _linePrefix,
 	bool const _renderResult,
-	bool const _highlight
-) const
+	bool const _highlight,
+	std::vector<std::string> _effects) const
 {
 	stringstream stream;
 
@@ -202,6 +202,17 @@ string TestFunctionCall::format(
 			{
 				stream << endl << _linePrefix << newline << ws;
 				stream << comment << m_call.expectations.comment << comment;
+			}
+		}
+
+		if (!_effects.empty())
+		{
+			stream << std::endl;
+			for (string const& effect: _effects)
+			{
+				stream << _linePrefix << "// - " << effect;
+				if (effect != *_effects.rbegin())
+					stream << std::endl;
 			}
 		}
 	};

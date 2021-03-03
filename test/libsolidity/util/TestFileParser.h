@@ -83,6 +83,7 @@ private:
 		std::string currentLiteral() { return m_currentLiteral; }
 
 		std::string scanComment();
+		std::string scanEffectString();
 		std::string scanIdentifierOrKeyword();
 		std::string scanDecimalNumber();
 		std::string scanHexNumber();
@@ -140,6 +141,9 @@ private:
 
 	/// Parses the expected result of a function call execution.
 	FunctionCallExpectations parseFunctionCallExpectations();
+
+	/// Parses the expected effects of a function call execution.
+	std::vector<std::string> parseFunctionCallEffects();
 
 	/// Parses the next parameter in a comma separated list.
 	/// Takes a newly parsed, and type-annotated `bytes` argument,

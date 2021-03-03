@@ -56,7 +56,8 @@ public:
 		ErrorReporter& _errorReporter,
 		std::string const& _linePrefix = "",
 		bool const _renderResult = false,
-		bool const _highlight = false
+		bool const _highlight = false,
+		std::vector<std::string> _effects = {}
 	) const;
 
 	/// Overloaded version that passes an error reporter which is never used outside
@@ -64,11 +65,12 @@ public:
 	std::string format(
 		std::string const& _linePrefix = "",
 		bool const _renderResult = false,
-		bool const _highlight = false
+		bool const _highlight = false,
+		std::vector<std::string> _effects = {}
 	) const
 	{
 		ErrorReporter reporter;
-		return format(reporter, _linePrefix, _renderResult, _highlight);
+		return format(reporter, _linePrefix, _renderResult, _highlight, _effects);
 	}
 
 	/// Resets current results in case the function was called and the result
