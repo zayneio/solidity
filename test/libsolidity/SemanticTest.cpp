@@ -52,6 +52,8 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	m_lineOffset(m_reader.lineNumber()),
 	m_enforceViaYul(enforceViaYul)
 {
+	using namespace placeholders;
+
 	auto simpleSmokeBuiltin = [](FunctionCall const& _call) -> std::optional<bytes> {
 		// This function is only used in test/libsolidity/semanticTests/builtins/smoke.sol.
 		// It could be removed when we have actual builtins.
@@ -69,10 +71,12 @@ SemanticTest::SemanticTest(string const& _filename, langutil::EVMVersion _evmVer
 	m_builtins["smoke_test2"] = simpleSmokeBuiltin;
 
 	m_hooks.emplace_back([](FunctionCall const& _call) -> std::vector<std::string> {
-	  if (_call.signature.find("smoke_") != string::npos)
+		if (_call.signature.find("smoke_") != string::npos)
 			return {_call.signature};
 		return {};
 	});
+
+	m_hooks.emplace_back(bind(&SemanticTest::eventHook, this, _1));
 
 	string choice = m_reader.stringSetting("compileViaYul", "default");
 	if (choice == "also")
@@ -412,4 +416,20 @@ bool SemanticTest::deploy(
 {
 	auto output = compileAndRunWithoutCheck(m_sources.sources, _value, _contractName, _arguments, _libraries);
 	return !output.empty() && m_transactionSuccessful;
+}
+
+std::vector<std::string> SemanticTest::eventHook(FunctionCall const&) const
+{
+	vector<LogRecord> recordedLogs = ExecutionFramework::recordedLogs();
+	vector<string> effects;
+	for (auto const& log: recordedLogs)
+	{
+		effects.emplace_back("log[" + std::to_string(log.index) + "]");
+		effects.emplace_back("  creator=" + log.creator.hex());
+		effects.emplace_back("  data=" + util::toHex(log.data));
+		uint32_t index = 0;
+		for (auto& topic: log.topics)
+			effects.emplace_back("  topic[" + std::to_string(index++) + "]=" + topic.hex());
+	}
+	return effects;
 }
