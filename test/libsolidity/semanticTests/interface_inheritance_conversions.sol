@@ -39,8 +39,8 @@ contract C {
 // convertParent() -> 1
 // gas irOptimized: 122356
 // convertSubA() -> 1, 2
-// gas irOptimized: 124555
+// gas irOptimized: 124552
 // gas legacy: 101703
 // convertSubB() -> 1, 3
-// gas irOptimized: 124489
+// gas irOptimized: 124486
 // gas legacy: 101637
