@@ -159,7 +159,9 @@ void CodeTransform::freeUnusedVariables(bool _popUnusedSlotsAtStackTop)
 				deleteVariable(*var);
 	// Directly in a function body block, we can also delete the function arguments,
 	// which live in the virtual function scope.
-	if (!m_scope->functionScope && m_scope->superScope && m_scope->superScope->functionScope)
+	// However, doing so after the return variables are already allocated, seems to have an adverse
+	// effect, so we only do it before that.
+	if (!returnVariablesAndFunctionExitAreSetup() && !m_scope->functionScope && m_scope->superScope && m_scope->superScope->functionScope)
 		for (auto const& identifier: m_scope->superScope->identifiers)
 			if (Scope::Variable const* var = get_if<Scope::Variable>(&identifier.second))
 				if (m_variablesScheduledForDeletion.count(var))

@@ -16,4 +16,4 @@ contract C {
 // compileViaYul: also
 // ----
 // f() -> 0, 0, 0
-// gas irOptimized: 101965
+// gas irOptimized: 101935
