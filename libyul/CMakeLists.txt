@@ -196,6 +196,8 @@ add_library(yul
 	optimiser/VarDeclInitializer.h
 	optimiser/VarNameCleaner.cpp
 	optimiser/VarNameCleaner.h
+	optimiser/ZeroByReturndatasizeReplacer.cpp
+	optimiser/ZeroByReturndatasizeReplacer.h
 )
 
 target_link_libraries(yul PUBLIC evmasm solutil langutil smtutil)

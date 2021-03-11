@@ -60,6 +60,7 @@
 #include <libyul/optimiser/LoopInvariantCodeMotion.h>
 #include <libyul/optimiser/Metrics.h>
 #include <libyul/optimiser/NameSimplifier.h>
+#include <libyul/optimiser/ZeroByReturndatasizeReplacer.h>
 #include <libyul/backends/evm/ConstantOptimiser.h>
 #include <libyul/AsmAnalysis.h>
 #include <libyul/AsmAnalysisInfo.h>
@@ -203,7 +204,8 @@ map<string, unique_ptr<OptimiserStep>> const& OptimiserSuite::allSteps()
 			StructuralSimplifier,
 			UnusedFunctionParameterPruner,
 			UnusedPruner,
-			VarDeclInitializer
+			VarDeclInitializer,
+			ZeroByReturndatasizeReplacer
 		>();
 	// Does not include VarNameCleaner because it destroys the property of unique names.
 	// Does not include NameSimplifier.
@@ -243,6 +245,7 @@ map<string, char> const& OptimiserSuite::stepNameToAbbreviationMap()
 		{UnusedFunctionParameterPruner::name, 'p'},
 		{UnusedPruner::name,                  'u'},
 		{VarDeclInitializer::name,            'd'},
+		{ZeroByReturndatasizeReplacer::name,  'z'},
 	};
 	yulAssert(lookupTable.size() == allSteps().size(), "");
 	yulAssert((
