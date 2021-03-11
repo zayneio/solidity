@@ -243,8 +243,8 @@
 //         let challenge := mod(calldataload(0x44), _2)
 //         if gt(m, n)
 //         {
-//             mstore(0x00, 404)
-//             revert(0x00, 0x20)
+//             mstore(returndatasize(), 404)
+//             revert(returndatasize(), 0x20)
 //         }
 //         let kn := calldataload(add(calldatasize(), not(191)))
 //         mstore(0x2a0, caller())
@@ -253,7 +253,7 @@
 //         kn := mulmod(sub(_2, kn), challenge, _2)
 //         hashCommitments(notes, n)
 //         let b := add(0x300, mul(n, _1))
-//         let i := 0
+//         let i := returndatasize()
 //         for { } lt(i, n) { i := add(i, 0x01) }
 //         {
 //             let _3 := add(calldataload(0x04), mul(i, 0xc0))
@@ -372,12 +372,12 @@
 //     }
 //     function hashCommitments(notes, n)
 //     {
-//         let i := 0
+//         let i := returndatasize()
 //         for { } lt(i, n) { i := add(i, 0x01) }
 //         {
 //             let _1 := 0x80
 //             calldatacopy(add(0x300, mul(i, _1)), add(add(notes, mul(i, 0xc0)), 0x60), _1)
 //         }
-//         mstore(0, keccak256(0x300, mul(n, 0x80)))
+//         mstore(returndatasize(), keccak256(0x300, mul(n, 0x80)))
 //     }
 // }

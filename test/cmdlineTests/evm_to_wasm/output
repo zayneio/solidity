@@ -3,7 +3,9 @@
 
 Pretty printed source:
 object "object" {
-    code { { sstore(0, 1) } }
+    code {
+        { sstore(returndatasize(), 1) }
+    }
 }
 
 
@@ -14,9 +16,10 @@ object "object" {
     code {
         function main()
         {
-            let _1 := 0
-            mstore_internal(0:i32, _1, _1, _1, _1)
-            mstore_internal(32:i32, _1, _1, _1, 1)
+            let _1 := i64.extend_i32_u(eth.getReturnDataSize())
+            let _2 := 0
+            mstore_internal(0:i32, _2, _2, _2, _1)
+            mstore_internal(32:i32, _2, _2, _2, 1)
             eth.storageStore(0:i32, 32:i32)
         }
         function bswap16(x:i32) -> y:i32
@@ -45,20 +48,23 @@ object "object" {
 
 
 Binary representation:
-0061736d01000000011b0560000060017e017e60017f017f60057f7e7e7e7e0060027f7f0002190108657468657265756d0c73746f7261676553746f7265000403060500020201030503010001060100071102066d656d6f72790200046d61696e00010ac001052901017e0240420021004100200020002000200010054120200020002000420110054100412010000b0b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100241107421022002200041107610027221010b20010b2201027e02402000a71003ad422086210220022000422088a71003ad8421010b20010b32000240200020011004370000200041086a20021004370000200041106a20031004370000200041186a200410043700000b0b
+0061736d01000000011f066000006000017f60017e017e60017f017f60057f7e7e7e7e0060027f7f0002360208657468657265756d0c73746f7261676553746f7265000508657468657265756d1167657452657475726e4461746153697a65000103060500030302040503010001060100071102066d656d6f72790200046d61696e00020ac501052e01027e02401001ad2100420021014100200120012001200010064120200120012001420110064100412010000b0b1f01017f024020004108744180fe0371200041087641ff01717221010b20010b1e01027f02402000100341107421022002200041107610037221010b20010b2201027e02402000a71004ad422086210220022000422088a71004ad8421010b20010b32000240200020011005370000200041086a20021005370000200041106a20031005370000200041186a200410053700000b0b
 
 Text representation:
 (module
     (import "ethereum" "storageStore" (func $eth.storageStore (param i32 i32)))
+    (import "ethereum" "getReturnDataSize" (func $eth.getReturnDataSize (result i32)))
     (memory $memory (export "memory") 1)
     (export "main" (func $main))
 
 (func $main
     (local $_1 i64)
+    (local $_2 i64)
     (block $label_
-        (local.set $_1 (i64.const 0))
-        (call $mstore_internal (i32.const 0) (local.get $_1) (local.get $_1) (local.get $_1) (local.get $_1))
-        (call $mstore_internal (i32.const 32) (local.get $_1) (local.get $_1) (local.get $_1) (i64.const 1))
+        (local.set $_1 (i64.extend_i32_u (call $eth.getReturnDataSize)))
+        (local.set $_2 (i64.const 0))
+        (call $mstore_internal (i32.const 0) (local.get $_2) (local.get $_2) (local.get $_2) (local.get $_1))
+        (call $mstore_internal (i32.const 32) (local.get $_2) (local.get $_2) (local.get $_2) (i64.const 1))
         (call $eth.storageStore (i32.const 0) (i32.const 32))
     )
 )
