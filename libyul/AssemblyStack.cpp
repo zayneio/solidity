@@ -225,8 +225,9 @@ namespace
 evmasm::Assembly::OptimiserSettings translateOptimiserSettings(solidity::frontend::OptimiserSettings const& _settings, langutil::EVMVersion _evmVersion)
 {
 	// Constructing it this way so that we notice changes in the fields.
-	evmasm::Assembly::OptimiserSettings asmSettings{false, false, false, false, false, false, _evmVersion, 0};
+	evmasm::Assembly::OptimiserSettings asmSettings{false, false, false, false, false, false, false, _evmVersion, 0};
 	asmSettings.isCreation = true;
+	asmSettings.runInliner = _settings.runInliner;
 	asmSettings.runJumpdestRemover = _settings.runJumpdestRemover;
 	asmSettings.runPeephole = _settings.runPeephole;
 	asmSettings.runDeduplicate = _settings.runDeduplicate;
