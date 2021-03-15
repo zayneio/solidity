@@ -808,14 +808,17 @@ string IRGenerator::deployCode(ContractDefinition const& _contract)
 			let <var> := mload(<memoryOffset>)
 		</loadImmutables>
 
-		codecopy(0, dataoffset("<object>"), datasize("<object>"))
+		let <pos> := <allocateUnbounded>()
+		codecopy(<pos>, dataoffset("<object>"), datasize("<object>"))
 
 		<#storeImmutables>
-			setimmutable(0, "<immutableName>", <var>)
+			setimmutable(<pos>, "<immutableName>", <var>)
 		</storeImmutables>
 
-		return(0, datasize("<object>"))
+		return(<pos>, datasize("<object>"))
 	)X");
+	t("allocateUnbounded", m_utils.allocateUnboundedFunction());
+	t("pos", m_context.newYulVariable());
 	t("object", IRNames::deployedObject(_contract));
 
 	vector<map<string, string>> loadImmutables;
