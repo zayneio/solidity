@@ -4082,16 +4082,22 @@ string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string
 {
 	if (revertStrings >= RevertStrings::Debug && !_message.empty())
 	{
+		// TODO turn this into a proper function call at some point
+		// and use allocateUnboundedFunction
 		Whiskers templ(R"({
-			mstore(0, <sig>)
-			mstore(4, 0x20)
-			mstore(add(4, 0x20), <length>)
-			let reasonPos := add(4, 0x40)
+			let pos := mload(<freeMemoryPointer>)
+			mstore(pos, <sig>)
+			pos := add(pos, 4)
+			mstore(pos, 0x20)
+			pos := add(pos, 0x20)
+			mstore(pos, <length>)
+			pos := add(pos, 0x20)
 			<#word>
-				mstore(add(reasonPos, <offset>), <wordValue>)
+				mstore(add(pos, <offset>), <wordValue>)
 			</word>
-			revert(0, add(reasonPos, <end>))
+			revert(pos, add(pos, <end>))
 		})");
+		templ("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer));
 		templ("sig", util::selectorFromSignature("Error(string)").str());
 		templ("length", to_string(_message.length()));
 
