@@ -244,12 +244,13 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 	for (auto const& t: _typeParameters)
 		encodedSize += t->decodingType()->calldataHeadSize();
 
+	m_context << u256(0);
 	Whiskers templ(R"({
-		if lt(len, <encodedSize>) { <revertString> }
+		condition := lt(len, <encodedSize>)
 	})");
 	templ("encodedSize", to_string(encodedSize));
-	templ("revertString", m_context.revertReasonIfDebug("Calldata too short"));
-	m_context.appendInlineAssembly(templ.render(), {"len"});
+	m_context.appendInlineAssembly(templ.render(), {"condition"});
+	m_context.appendConditionalRevert("Calldata too short");
 
 	m_context << Instruction::DUP2 << Instruction::ADD;
 	m_context << Instruction::SWAP1;
@@ -290,25 +291,40 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 
 					// Check that the data pointer is valid and that length times
 					// item size is still inside the range.
-					Whiskers templ(R"({
-						if gt(ptr, 0x100000000) { <revertStringPointer> }
-						ptr := add(ptr, base_offset)
-						let array_data_start := add(ptr, 0x20)
-						if gt(array_data_start, input_end) { <revertStringStart> }
-						let array_length := mload(ptr)
-						if or(
+					vector<string> localvars{"input_end", "base_offset", "offset", "ptr", "dst"};
+					m_context << u256(0);
+					m_context.appendInlineAssembly("condition := gt(ptr, 0x100000000)", localvars + vector<string>{"condition"});
+					m_context.appendConditionalRevert(false, "ABI memory decoding: invalid data pointer");
+
+					m_context.appendInlineAssembly("ptr := add(ptr, base_offset)", localvars);
+					m_context << u256(0);
+					localvars.emplace_back("array_data_start");
+					m_context.appendInlineAssembly("array_data_start := add(ptr, 0x20)", localvars);
+
+					m_context << u256(0);
+					m_context.appendInlineAssembly("condition := gt(array_data_start, input_end)", localvars + vector<string>{"condition"});
+					m_context.appendConditionalRevert(false, "ABI memory decoding: invalid data start");
+
+					m_context << u256(0);
+					localvars.emplace_back("array_length");
+					m_context.appendInlineAssembly("array_length := mload(ptr)", localvars);
+
+					m_context << u256(0);
+					m_context.appendInlineAssembly(R"(
+						condition := or(
 							gt(array_length, 0x100000000),
-							gt(add(array_data_start, mul(array_length, <item_size>)), input_end)
-						) { <revertStringLength> }
+							gt(add(array_data_start, mul(array_length, )" + to_string(arrayType.calldataStride()) + R"( ), input_end)
+					)", localvars + vector<string>{"condition"});
+					m_context.appendConditionalRevert(false, "ABI memory decoding: invalid data length");
+
+					m_context.appendInlineAssembly(R"(
 						mstore(dst, array_length)
 						dst := add(dst, 0x20)
-					})");
-					templ("item_size", to_string(arrayType.calldataStride()));
-					// TODO add test
-					templ("revertStringPointer", m_context.revertReasonIfDebug("ABI memory decoding: invalid data pointer"));
-					templ("revertStringStart", m_context.revertReasonIfDebug("ABI memory decoding: invalid data start"));
-					templ("revertStringLength", m_context.revertReasonIfDebug("ABI memory decoding: invalid data length"));
-					m_context.appendInlineAssembly(templ.render(), {"input_end", "base_offset", "offset", "ptr", "dst"});
+					})", localvars);
+
+					// Remove "array_length" and "array_data_start".
+					m_context << Instruction::POP << Instruction::POP;
+
 					// stack: v1 v2 ... v(k-1) dstmem input_end base_offset current_offset data_ptr dstdata
 					m_context << Instruction::SWAP1;
 					// stack: v1 v2 ... v(k-1) dstmem input_end base_offset current_offset dstdata data_ptr
@@ -339,14 +355,14 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 						if gt(data_offset, 0x100000000) { <revertString> }
 					})")
 					// TODO add test
-					("revertString", m_context.revertReasonIfDebug("ABI calldata decoding: invalid data offset"))
+					("revertString", m_context.utilFunctions().revertReasonIfDebug("ABI calldata decoding: invalid data offset"))
 					.render(), {"data_offset"});
 					m_context << Instruction::DUP3 << Instruction::ADD;
 					// stack: input_end base_offset next_pointer array_head_ptr
 					m_context.appendInlineAssembly(Whiskers(R"({
 						if gt(add(array_head_ptr, 0x20), input_end) { <revertString> }
 					})")
-					("revertString", m_context.revertReasonIfDebug("ABI calldata decoding: invalid head pointer"))
+					("revertString", m_context.utilFunctions().revertReasonIfDebug("ABI calldata decoding: invalid head pointer"))
 					.render(), {"input_end", "base_offset", "next_ptr", "array_head_ptr"});
 
 					// retrieve length
@@ -360,7 +376,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 							gt(add(data_ptr, mul(array_length, )" + to_string(arrayType.calldataStride()) + R"()), input_end)
 						) { <revertString> }
 					})")
-					("revertString", m_context.revertReasonIfDebug("ABI calldata decoding: invalid data pointer"))
+					("revertString", m_context.utilFunctions().revertReasonIfDebug("ABI calldata decoding: invalid data pointer"))
 					.render(), {"input_end", "base_offset", "data_ptr", "array_length", "next_ptr"});
 				}
 				else

@@ -2206,8 +2206,8 @@ string YulUtilFunctions::calldataArrayIndexRangeAccess(ArrayType const& _type)
 	return m_functionCollector.createFunction(functionName, [&]() {
 		return Whiskers(R"(
 			function <functionName>(offset, length, startIndex, endIndex) -> offsetOut, lengthOut {
-				if gt(startIndex, endIndex) { <revertSliceStartAfterEnd> }
-				if gt(endIndex, length) { <revertSliceGreaterThanLength> }
+				if gt(startIndex, endIndex) { <revertSliceStartAfterEnd>() }
+				if gt(endIndex, length) { <revertSliceGreaterThanLength>() }
 				offsetOut := add(offset, mul(startIndex, <stride>))
 				lengthOut := sub(endIndex, startIndex)
 			}
@@ -2229,13 +2229,13 @@ string YulUtilFunctions::accessCalldataTailFunction(Type const& _type)
 		return Whiskers(R"(
 			function <functionName>(base_ref, ptr_to_tail) -> addr<?dynamicallySized>, length</dynamicallySized> {
 				let rel_offset_of_tail := calldataload(ptr_to_tail)
-				if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { <invalidCalldataTailOffset> }
+				if iszero(slt(rel_offset_of_tail, sub(sub(calldatasize(), base_ref), sub(<neededLength>, 1)))) { <invalidCalldataTailOffset>() }
 				addr := add(base_ref, rel_offset_of_tail)
 				<?dynamicallySized>
 					length := calldataload(addr)
-					if gt(length, 0xffffffffffffffff) { <invalidCalldataTailLength> }
+					if gt(length, 0xffffffffffffffff) { <invalidCalldataTailLength>() }
 					addr := add(addr, 32)
-					if sgt(addr, sub(calldatasize(), mul(length, <calldataStride>))) { <shortCalldataTail> }
+					if sgt(addr, sub(calldatasize(), mul(length, <calldataStride>))) { <shortCalldataTail>() }
 				</dynamicallySized>
 			}
 		)")
@@ -4078,14 +4078,16 @@ string YulUtilFunctions::readFromMemoryOrCalldata(Type const& _type, bool _fromC
 	});
 }
 
-string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string const& _message)
+string YulUtilFunctions::revertReasonIfDebug(string const& _message)
 {
-	if (revertStrings >= RevertStrings::Debug && !_message.empty())
-	{
-		// TODO turn this into a proper function call at some point
-		// and use allocateUnboundedFunction
-		Whiskers templ(R"({
-			let pos := mload(<freeMemoryPointer>)
+	string functionName = "revert_error_" + util::toHex(util::keccak256(_message).asBytes());
+	return m_functionCollector.createFunction(functionName, [&](auto&, auto&) -> string {
+		if (m_revertStrings < RevertStrings::Debug || _message.empty())
+			return "revert(0, 0)";
+
+		Whiskers templ(R"(
+			let start := <allocateUnbounded>()
+			let pos := start
 			mstore(pos, <sig>)
 			pos := add(pos, 4)
 			mstore(pos, 0x20)
@@ -4095,9 +4097,9 @@ string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string
 			<#word>
 				mstore(add(pos, <offset>), <wordValue>)
 			</word>
-			revert(pos, add(pos, <end>))
-		})");
-		templ("freeMemoryPointer", to_string(CompilerUtils::freeMemoryPointer));
+			revert(start, <overallLength>)
+		)");
+		templ("allocateUnbounded", allocateUnboundedFunction());
 		templ("sig", util::selectorFromSignature("Error(string)").str());
 		templ("length", to_string(_message.length()));
 
@@ -4109,17 +4111,10 @@ string YulUtilFunctions::revertReasonIfDebug(RevertStrings revertStrings, string
 			wordParams[i]["wordValue"] = formatAsStringOrNumber(_message.substr(32 * i, 32));
 		}
 		templ("word", wordParams);
-		templ("end", to_string(words * 32));
+		templ("overallLength", to_string(4 + 0x20 + 0x20 + words * 32));
 
 		return templ.render();
-	}
-	else
-		return "revert(0, 0)";
-}
-
-string YulUtilFunctions::revertReasonIfDebug(string const& _message)
-{
-	return revertReasonIfDebug(m_revertStrings, _message);
+	});
 }
 
 string YulUtilFunctions::panicFunction(util::PanicCode _code)

@@ -356,22 +356,30 @@ CompilerContext& CompilerContext::appendConditionalPanic(util::PanicCode _code)
 
 CompilerContext& CompilerContext::appendRevert(string const& _message)
 {
-	appendInlineAssembly("{ " + revertReasonIfDebug(_message) + " }");
+	callYulFunction(m_yulUtilFunctions.revertReasonIfDebug(_message), 0, 0);
 	return *this;
 }
 
 CompilerContext& CompilerContext::appendConditionalRevert(bool _forwardReturnData, string const& _message)
 {
 	if (_forwardReturnData && m_evmVersion.supportsReturndata())
+	{
+		solAssert(_message.empty(), "");
 		appendInlineAssembly(R"({
 			if condition {
 				returndatacopy(0, 0, returndatasize())
 				revert(0, returndatasize())
 			}
 		})", {"condition"});
+		*this << Instruction::POP;
+	}
 	else
-		appendInlineAssembly("{ if condition { " + revertReasonIfDebug(_message) + " } }", {"condition"});
-	*this << Instruction::POP;
+	{
+		*this << Instruction::ISZERO;
+		evmasm::AssemblyItem afterTag = appendConditionalJump();
+		callYulFunction(utilFunctions().revertReasonIfDebug(_message), 0, 0);
+		*this << afterTag;
+	}
 	return *this;
 }
 
@@ -555,11 +563,6 @@ void CompilerContext::optimizeYul(yul::Object& _object, yul::EVMDialect const& _
 	cout << "After optimizer:" << endl;
 	cout << yul::AsmPrinter(*dialect)(*object.code) << endl;
 #endif
-}
-
-string CompilerContext::revertReasonIfDebug(string const& _message)
-{
-	return YulUtilFunctions::revertReasonIfDebug(m_revertStrings, _message);
 }
 
 void CompilerContext::updateSourceLocation()

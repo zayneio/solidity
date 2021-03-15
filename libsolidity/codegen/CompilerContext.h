@@ -267,11 +267,6 @@ public:
 		std::string _sourceName = "--CODEGEN--"
 	);
 
-	/// If m_revertStrings is debug, @returns inline assembly code that
-	/// stores @param _message in memory position 0 and reverts.
-	/// Otherwise returns "revert(0, 0)".
-	std::string revertReasonIfDebug(std::string const& _message = "");
-
 	void optimizeYul(yul::Object& _object, yul::EVMDialect const& _dialect, OptimiserSettings const& _optimiserSetting, std::set<yul::YulString> const& _externalIdentifiers = {});
 
 	/// Appends arbitrary data to the end of the bytecode.
