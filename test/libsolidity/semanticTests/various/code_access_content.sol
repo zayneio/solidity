@@ -40,6 +40,6 @@ contract C {
 // compileViaYul: also
 // ----
 // testRuntime() -> true
-// gas legacy: 100679
+// gas legacy: 103126
 // testCreation() -> true
-// gas legacy: 101937
+// gas legacy: 104353

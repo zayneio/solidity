@@ -26,5 +26,5 @@ contract B {
 // ----
 // g() -> 42
 // gas irOptimized: 127021
-// gas legacy: 180597
+// gas legacy: 191001
 // gas legacyOptimized: 116153

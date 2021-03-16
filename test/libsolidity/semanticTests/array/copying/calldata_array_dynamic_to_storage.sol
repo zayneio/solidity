@@ -12,5 +12,5 @@ contract C {
 // ----
 // f(uint256[]): 0x20, 0x03, 0x1, 0x2, 0x3 -> 0x1
 // gas irOptimized: 108100
-// gas legacy: 105365
+// gas legacy: 105360
 // gas legacyOptimized: 105149

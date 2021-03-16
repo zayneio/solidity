@@ -23,5 +23,5 @@ contract A {
 // different_salt() -> true
 // same_salt() -> true
 // gas irOptimized: 98439083
-// gas legacy: 98439116
+// gas legacy: 98439150
 // gas legacyOptimized: 98438982

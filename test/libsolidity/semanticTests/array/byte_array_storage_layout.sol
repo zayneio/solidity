@@ -43,15 +43,15 @@ contract c {
 // ----
 // storage: empty
 // test_short() -> 1780731860627700044960722568376587075150542249149356309979516913770823710
-// gas legacy: 110938
-// gas legacyOptimized: 109691
+// gas legacy: 110933
+// gas legacyOptimized: 109686
 // storage: nonempty
 // test_long() -> 67
-// gas irOptimized: 134832
-// gas legacy: 213590
-// gas legacyOptimized: 211011
+// gas irOptimized: 134712
+// gas legacy: 213585
+// gas legacyOptimized: 211006
 // storage: nonempty
 // test_pop() -> 1780731860627700044960722568376592200742329637303199754547598369979433020
-// gas legacy: 176030
-// gas legacyOptimized: 173470
+// gas legacy: 176025
+// gas legacyOptimized: 173465
 // storage: nonempty

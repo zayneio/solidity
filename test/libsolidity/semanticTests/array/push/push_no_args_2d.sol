@@ -30,14 +30,14 @@ contract C {
 // l() -> 0
 // f(uint256,uint256): 42, 64 ->
 // gas irOptimized: 202798
-// gas legacy: 163034
+// gas legacy: 163029
 // gas legacyOptimized: 157045
 // l() -> 1
 // ll(uint256): 0 -> 43
 // a(uint256,uint256): 0, 42 -> 64
 // f(uint256,uint256): 84, 128 ->
 // gas irOptimized: 299014
-// gas legacy: 222080
+// gas legacy: 222075
 // gas legacyOptimized: 210631
 // l() -> 2
 // ll(uint256): 1 -> 85
