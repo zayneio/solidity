@@ -249,7 +249,7 @@ void CompilerUtils::abiDecode(TypePointers const& _typeParameters, bool _fromMem
 		condition := lt(len, <encodedSize>)
 	})");
 	templ("encodedSize", to_string(encodedSize));
-	m_context.appendInlineAssembly(templ.render(), {"condition"});
+	m_context.appendInlineAssembly(templ.render(), {"len", "condition"});
 	m_context.appendConditionalRevert("Calldata too short");
 
 	m_context << Instruction::DUP2 << Instruction::ADD;
