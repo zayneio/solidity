@@ -163,7 +163,7 @@ The component does not yet support all features of the Solidity language and
 likely outputs many warnings. In case it reports unsupported features, the
 analysis may not be fully sound.
 
-.. index:: source file, ! import, module
+.. index:: source file, ! import, module, source unit
 
 .. _import:
 
@@ -231,7 +231,7 @@ builds on different platforms.
 Virtual Filesystem
 ~~~~~~~~~~~~~~~~~~
 
-The compiler maintains an internal database (virtual filesystem) where each compiled module is
+The compiler maintains an internal database (virtual filesystem) where each compiled source unit is
 assigned a unique *import key* which is an opaque and unstructured identifier.
 
 While an import key in the virtual filesystem can be anything, it should be a valid path if the
@@ -243,11 +243,11 @@ regard and allows the user to provide a callback to perform this operation.
 In this case the keys can be arbitrary.
 For example they could be URLs as long as the custom loader can handle them.
 
-There are several ways to load modules into the virtual filesystem:
+There are several ways to load source units into the virtual filesystem:
 
 #. **import statement**
 
-   The ``import`` statement tells the compiler to load and compile a module and then make its
+   The ``import`` statement tells the compiler to load and compile a source unit and then make its
    content available to the current module.
 
    We will refer to the path used in the statement as *import path*.
@@ -357,7 +357,7 @@ There are several ways to load modules into the virtual filesystem:
 
 .. warning::
 
-    The compiler uses import keys to determine whether imports refer to the same module or not.
+    The compiler uses import keys to determine whether imports refer to the same source unit or not.
     If you refer to a file in multiple ways that translate to different keys, it will be compiled
     multiple times.
 
@@ -459,7 +459,7 @@ Imports Relative to Source
 
 An import starting with ``./`` or ``../`` is *relative to source*.
 It differs from imports relative to base in that the compiler does interpret it as a path and
-combines it with the path of the importing module to get the import key.
+combines it with the path of the importing source unit to get the import key.
 
 .. code-block:: solidity
     :caption: /project/lib/math.sol
@@ -475,9 +475,9 @@ If the parent import key is relative to base, the resulting import key is relati
     import "./util.sol" as util;    // Import key: lib/util.sol
     import "../token.sol" as token; // Import key: token.sol
 
-To evaluate the prefix, the compiler starts with the import key of the importing module and first
-strips the file name. Then, for every ``../`` segment in the import path it strips one segment
-from the key.
+To evaluate the prefix, the compiler starts with the import key of the importing source unit and
+first strips the file name.
+Then, for every ``../`` segment in the import path it strips one segment from the key.
 
 .. code-block:: solidity
     :caption: /a/b/c/contract.sol
