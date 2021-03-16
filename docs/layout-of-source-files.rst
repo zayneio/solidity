@@ -332,8 +332,8 @@ There are several ways to load source units into the virtual filesystem:
 
        When using ``--standard-json`` you cannot provide additional source files as command-line
        arguments but it does not mean that the compiler will not load any extra files from disk.
-       If a contract imports a file that is not present in `sources`, the compiler will use the file
-       loader as in any other situation, which may result in the source being read from disk.
+       If a contract imports a file that is not present in ``sources``, the compiler will use the
+       file loader as in any other situation, which may result in the source being read from disk.
 
 #. **Standard JSON (as URL)**
 
