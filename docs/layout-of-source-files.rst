@@ -247,8 +247,8 @@ There are several ways to load source units into the virtual filesystem:
 
 #. **import statement**
 
-   The ``import`` statement tells the compiler to load and compile a source unit and then make its
-   content available to the current module.
+   The ``import`` statement requests a module from the compiler and allows to access certain symbols
+   from that module.
 
    We will refer to the path used in the statement as *import path*.
    The import path is translated into an import key first and then the compiler uses the key to
@@ -261,6 +261,7 @@ There are several ways to load source units into the virtual filesystem:
        import "/contracts/lib/token.sol";   // Absolute
        import "contracts/lib/token.sol";    // Relative to base
        import "./contracts/lib/token.sol";  // Relative to source
+       import "../contracts/lib/token.sol"; // Relative to source
 
    There is actually no distinction between absolute imports and imports relative to base at the
    virtual filesystem level - in both cases the import path is translated into an import key using
@@ -405,7 +406,6 @@ is for filesystem lookup.
 The resulting filesystem path is not affected by the value of base path.
 
 .. index:: import relative to base, relative import
-
 .. _imports-relative-to-base:
 
 Imports Relative to Base
