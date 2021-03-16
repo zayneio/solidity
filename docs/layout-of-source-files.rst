@@ -285,7 +285,7 @@ There are several ways to load source units into the virtual filesystem:
    These are interpreted as *filesystem paths* and the rules for translating them into source unit IDs
    are different than for import paths.
    Most imporantly, filesystem paths are platform-specific while import paths are not.
-   For example a path like ``C:\project\contract.sol`` will be intepreted differently on Windows
+   For example a path like ``C:\project\contract.sol`` will be interpreted differently on Windows
    and on systems that follow the UNIX path conventions.
 
    It does not matter if the path you specify is relative or absolute.
