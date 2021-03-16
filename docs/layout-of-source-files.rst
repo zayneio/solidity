@@ -263,13 +263,16 @@ There are several ways to load source units into the virtual filesystem:
        import "./contracts/lib/token.sol";  // Relative to source
        import "../contracts/lib/token.sol"; // Relative to source
 
-   There is actually no distinction between absolute imports and imports relative to base at the
-   virtual filesystem level - in both cases the import path is translated into an import key using
-   the same rules - but they are handled differently by the default file loader.
+   There is actually no distinction between :ref:`absolute imports <absolute-imports>` and
+   :ref:`imports relative to base <imports-relative-to-base>` at the virtual filesystem level.
+   In both cases the import path is translated into an import key using the same rules but and are
+   only handled differently by the default file loader.
 
-   Imports relative to source, on the other hand, need to be interpreted as paths and normalized to
-   be properly resolved into import keys.
+   :ref:`Imports relative to source <imports-relative-to-source>`, on the other hand, need to be
+   interpreted as paths and normalized to be properly resolved into import keys.
    The path in this case must conform to UNIX path conventions regardless of the underlying platform.
+
+   .. _virtual-filesystem-loading-files-cli:
 
 #. **CLI**
 
@@ -281,11 +284,19 @@ There are several ways to load source units into the virtual filesystem:
 
    These are interpreted as *filesystem paths* and the rules for translating them into import keys
    are different than for import paths.
-   They follow the shell rules instead: they can only be relatve to
-   the current working directory and they are normalized and converted into canonical form according
-   to platform-specific rules to determine which physical file they refer to.
-   Only if the file actually exists under that path, it is added to the virtual filesystem and the
-   import key is based on the canonical path.
+   Most imporantly, filesystem paths are platform-specific while import paths are not.
+   For example a path like ``C:\project\contract.sol`` will be intepreted differently on Windows
+   and on systems that follow the UNIX path conventions.
+
+   It does not matter if the path you specify is relative or absolute.
+   If the path is relative, it is converted into an absolute one by prepending the current working
+   directory.
+   Then the path is normalized, which involves first a conversion from the platform-specific format
+   the internal UNIX-like format, collapsing all the relative ``./`` and ``../`` segments and
+   removing redundant slashes.
+   Finally, :ref:`the base path <imports-relative-to-base>` is stripped from the import key.
+   This way the resulting import key is relative to base if and only if the file is located inside
+   the base directory.
 
 #. **Standard JSON (as content)**
 
@@ -386,6 +397,7 @@ Now that we know how the virtual filesystem works, let us go through the rules u
 import paths into import keys in more detail.
 
 .. index:: absolute import
+.. _absolute-imports:
 
 Absolute Imports
 ~~~~~~~~~~~~~~~~
@@ -433,7 +445,8 @@ To convert the path into an absolute one, the loader combines it with the path s
 If the base path itself is relative, it is interpreted as relative to the current working directory
 just like any other path given on the command line.
 
-Base path also affects the way paths specified on the command line are converted into import keys.
+Base path also affects :ref:`the way paths specified on the command line are converted into import
+keys <virtual-filesystem-loading-files-cli>`.
 The import key normally is the absolute, normalized path to the file in the UNIX format but if the
 file happens to be inside the directory designated as the base path or one of its subdirectories
 the prefix is stripped from its import key and it becomes relative to base.
@@ -453,6 +466,7 @@ Note that if you do not specify base path, it is by default equal to the current
     solc /home/user/contract.sol --base-path /project # Import key: contract.sol
 
 .. index:: import relative to source, relative import
+.. _imports-relative-to-source:
 
 Imports Relative to Source
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
