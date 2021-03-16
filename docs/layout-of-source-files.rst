@@ -550,6 +550,12 @@ This may lead to surprising results in corner cases:
     import "../../c/util.sol";    // source unit ID: /a/c/util.sol
     import "../../../c/util.sol"; // source unit ID: /c/util.sol
 
+.. note::
+
+    The use of relative imports containing leading ``../`` segments is not recommended.
+    The same effect can be achieved in a more reliable way by using either absolute imports with
+    import remapping or imports relative to base.
+
 .. index:: remapping, import remapping
 .. _import-remapping:
 
@@ -561,11 +567,13 @@ force yout to keep all files within in a single directory and its subdirectories
 When using external libraries it is often desirable to keep their files in a separate location.
 To help with that, the compiler provides another mechanism: import remapping.
 
-Remapping allows you to use placeholders as source unit ID prefixes and then have the compiler
+Remapping allows you to use placeholders for source unit ID prefixes and then have the compiler
 replace them with actual paths.
 For example you can set up a remapping so that everything imported from the virtual directory
-``github.com/ethereum/dapp-bin/library`` would actually be read from your local directory
-``/usr/local/dapp-bin/library``.
+``github.com/ethereum/dapp-bin/library`` would actually receive source unit IDs starting with
+``dapp-bin/library``.
+By setting base path to ``/project`` you could then have the compiler find them in
+``/project/dapp-bin/library``
 
 The remappings can depend on a context, which allows you to configure packages to import,
 e.g. different versions of a library of the same name.
@@ -579,7 +587,7 @@ e.g. different versions of a library of the same name.
 Path remappings have the form of ``context:prefix=target``.
 All files in or below the ``context`` directory that import a file that starts with ``prefix`` are
 redirected by replacing ``prefix`` with ``target``.
-For example, if you clone ``github.com/ethereum/dapp-bin/`` locally to ``/usr/local/dapp-bin``,
+For example, if you clone ``github.com/ethereum/dapp-bin/`` locally to ``/project/dapp-bin``,
 you can use the following in your source file:
 
 ::
@@ -590,15 +598,16 @@ Then run the compiler:
 
 .. code-block:: bash
 
-    solc github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ source.sol
+    solc github.com/ethereum/dapp-bin/=dapp-bin/ --base-path /project source.sol
 
 As a more complex example, suppose you rely on a module that uses an old version of dapp-bin that
-you checked out to ``/usr/local/dapp-bin_old``, then you can run:
+you checked out to ``/project/dapp-bin_old``, then you can run:
 
 .. code-block:: bash
 
-    solc module1:github.com/ethereum/dapp-bin/=/usr/local/dapp-bin/ \
-         module2:github.com/ethereum/dapp-bin/=/usr/local/dapp-bin_old/ \
+    solc module1:github.com/ethereum/dapp-bin/=dapp-bin/ \
+         module2:github.com/ethereum/dapp-bin/=dapp-bin_old/ \
+         --base-path /project \
          source.sol
 
 This means that all imports in ``module2`` point to the old version but imports in ``module1``
