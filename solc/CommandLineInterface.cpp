@@ -574,14 +574,13 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 {
 	bool ignoreMissing = m_args.count(g_argIgnoreMissingFiles);
 	bool addStdin = false;
-	FileReader::FileSystemPathSet allowedDirectories;
 	if (m_args.count(g_argInputFile))
 		for (string path: m_args[g_argInputFile].as<vector<string>>())
 		{
 			auto eq = find(path.begin(), path.end(), '=');
 			if (eq != path.end())
 			{
-				if (auto r = CompilerStack::parseRemapping(path))
+				if (auto r = FileRemapper::parseRemapping(path))
 				{
 					m_remappings.emplace_back(std::move(*r));
 					path = string(eq + 1, path.end());
@@ -627,7 +626,7 @@ bool CommandLineInterface::readInputFilesAndConfigureRemappings()
 				m_fileReader.setSource(infile, readFileAsString(infile.string()));
 				path = boost::filesystem::canonical(infile).string();
 			}
-			allowedDirectories.insert(boost::filesystem::path(path).remove_filename());
+			m_fileReader.allowDirectory(boost::filesystem::path(path).remove_filename());
 		}
 
 	if (addStdin)

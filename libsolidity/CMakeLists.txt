@@ -133,6 +133,8 @@ set(sources
 	interface/DebugSettings.h
 	interface/FileReader.cpp
 	interface/FileReader.h
+	interface/FileRemapper.cpp
+	interface/FileRemapper.h
 	interface/GasEstimator.cpp
 	interface/GasEstimator.h
 	interface/Natspec.cpp

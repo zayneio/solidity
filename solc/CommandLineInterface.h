@@ -25,6 +25,7 @@
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/interface/DebugSettings.h>
 #include <libsolidity/interface/FileReader.h>
+#include <libsolidity/interface/FileRemapper.h>
 #include <libyul/AssemblyStack.h>
 #include <liblangutil/EVMVersion.h>
 
@@ -118,7 +119,7 @@ private:
 	/// Compiler arguments variable map
 	boost::program_options::variables_map m_args;
 	/// list of remappings
-	std::vector<frontend::CompilerStack::Remapping> m_remappings;
+	std::vector<FileRemapper::Remapping> m_remappings;
 	/// map of library names to addresses
 	std::map<std::string, util::h160> m_libraries;
 	/// Solidity compiler stack
