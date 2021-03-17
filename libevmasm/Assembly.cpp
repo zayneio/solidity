@@ -317,6 +317,9 @@ Json::Value Assembly::assemblyJSON(map<string, unsigned> const& _sourceIndices) 
 		case PushData:
 			collection.append(createJsonValue("PUSH data", sourceIndex, i.location().start, i.location().end, toStringInHex(i.data())));
 			break;
+		case VerbatimBytecode:
+			collection.append(createJsonValue("VERBATIM", sourceIndex, i.location().start, i.location().end, toHex(i.verbatimData())));
+			break;
 		default:
 			assertThrow(false, InvalidOpcode, "");
 		}
@@ -681,6 +684,9 @@ LinkerObject const& Assembly::assemble() const
 			ret.immutableReferences[i.data()].first = m_immutables.at(i.data());
 			ret.immutableReferences[i.data()].second.emplace_back(ret.bytecode.size());
 			ret.bytecode.resize(ret.bytecode.size() + 32);
+			break;
+		case VerbatimBytecode:
+			ret.bytecode += i.verbatimData();
 			break;
 		case AssignImmutable:
 		{
