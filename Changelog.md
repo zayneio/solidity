@@ -2,6 +2,8 @@
 
 Language Features:
  * Possibility to use ``bytes.concat`` with variable number of ``bytes`` and ``bytesNN`` arguments which behaves as a restricted version of `abi.encodePacked` with a more descriptive name.
+ * Support custom errors via the ``error`` keyword and introduce the ``revert`` statement.
+
 
 Compiler Features:
  * Low-Level Inliner: Inline ordinary jumps to small blocks and jumps to small blocks that terminate.
