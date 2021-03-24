@@ -116,6 +116,44 @@ Previously `f()` would return `0x64656164626565663135646561640000000000000000000
 Now it is returning `0x6465616462656566000000000000000000000000000000000000000000000010` (it has correct length, and correct elements, but doesn't contain dirty data).
 
 
+* For the old code generator, the evaluation order is unspecified. For the new code generator, we try to evaluate in source order (left to right), but do not guarantee it. This can lead to semantic differences.
+
+For example:
+
+::
+     // SPDX-License-Identifier: GPL-3.0
+     pragma solidity >0.8.0;
+     contract C {
+         function preincr_u8(uint8 a) public pure returns (uint8) {
+             return ++a + a;
+         }
+     }
+
+The function `preincr_u8(uint8)` returns the following for the input 1:
+- Old code gen: 3 (`1 + 2`) but the return value is unspecified in general
+- New code gen: 4 (`2 + 2`) but the return value is not guaranteed
+
+This behavior also true for function argument expressions.
+
+For example:
+
+::
+     // SPDX-License-Identifier: GPL-3.0
+     pragma solidity >0.8.0;
+     contract C {
+         function identity(uint8 a) public pure returns (uint8) {
+             return a;
+         }
+         function g(uint8 b) public pure returns (uint8) {
+             return identity(++b + b);
+         }
+     }
+
+The function `g(uint8)` returns the following for the input 1:
+- Old code gen: 3 (`1 + 2`) but the return value is unspecified in general
+- New code gen: 4 (`2 + 2`) but the return value is not guaranteed
+
+
 Internals
 =========
 
@@ -133,3 +171,31 @@ The ID ``0`` is reserved for uninitialized function pointers which then cause a 
 
 In the old code generator, internal function pointers are initialized with a special function that always causes a panic.
 This causes a storage write at construction time for internal function pointers in storage.
+
+Clean up:
+
+The old code generator only performs cleanup before an operation where it is important to have dirty bits cleaned.
+The new code generator performs cleanup after any operation that can result in dirty bits.
+
+For example:
+::
+     // SPDX-License-Identifier: GPL-3.0
+     pragma solidity >0.8.0;
+     contract C {
+         function f(uint8 a) public returns(uint r1, uint r2)
+         {
+             a = ~a;
+             assembly {
+                 r1 := a
+             }
+             r2 = a;
+         }
+     }
+
+The function `f(uint8)` returns the following for the input 1:
+- Old code gen: (`fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe`, `00000000000000000000000000000000000000000000000000000000000000fe`)
+- New code gen: (`00000000000000000000000000000000000000000000000000000000000000fe`, `00000000000000000000000000000000000000000000000000000000000000fe`)
+
+Note that, unlike the new code generator, the old code generator does not perform a clean up after the bit not assignment (`a = ~a`).
+This results in different values being assigned (within the inline assembly block) to return value `r1` between the old and new code generators.
+However, both code generators perform a clean up before the new value of `a` is assigned to `r2`.
