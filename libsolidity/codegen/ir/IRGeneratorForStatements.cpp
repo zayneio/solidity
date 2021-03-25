@@ -1045,7 +1045,7 @@ void IRGeneratorForStatements::endVisit(FunctionCall const& _functionCall)
 	}
 	case FunctionType::Kind::Error:
 	{
-		ErrorDefinition const* error = dynamic_cast<ErrorDefinition const*>(referencedDeclaration(_functionCall.expression()));
+		ErrorDefinition const* error = dynamic_cast<ErrorDefinition const*>(ASTNode::referencedDeclaration(_functionCall.expression()));
 		solAssert(error, "");
 		revertWithError(
 			error->functionType(true)->externalSignature(),
