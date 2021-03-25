@@ -108,13 +108,23 @@ limited to functions of the same library.
 Multiple modifiers are applied to a function by specifying them in a
 whitespace-separated list and are evaluated in the order presented.
 
+Explicit returns from a modifier or function body only leave the current
+modifier or function body. Return variables are assigned and
+control flow continues after the ``_`` in the preceding modifier.
+
 .. warning::
     In an earlier version of Solidity, ``return`` statements in functions
     having modifiers behaved differently.
 
-Explicit returns from a modifier or function body only leave the current
-modifier or function body. Return variables are assigned and
-control flow continues after the "_" in the preceding modifier.
+Modifiers cannot directly access or change the arguments and return values of functions they modify.
+An explicit return from a modifier with ``return;`` does not affect the values returned by the function.
+The only way a modifier can influence the return value is by changing state variables or by not
+executing the function body at all.
+In the latter case the return variables are set to their :ref:`default values<default-value>`,
+same as if the function did not return anything explicitly,
+
+The ``_`` symbol can appear in the modifier multiple times. and each occurrence is replaced with
+the function body.
 
 Arbitrary expressions are allowed for modifier arguments and in this context,
 all symbols visible from the function are visible in the modifier. Symbols
