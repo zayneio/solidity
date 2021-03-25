@@ -40,12 +40,15 @@ caller.
     }
 
 Errors cannot be overloaded or overridden but are inherited.
+The same error can be defined in multiple places as long as the scopes are distinct.
 Instances of errors can only be created in ``revert`` statements.
+
 The error creates data that is then passed to the caller with the revert operation
 to either return to the off-chain component or catch it in a try/catch statement.
 If you do not provide any parameters, the error only needs four bytes of
 data and you can use :ref:`NatSpec <natspec>` as above
 to further explain the reasons behind the error, which is not stored on chain.
+This makes this a very cheap and convenient error-reporting feature at the same time.
 
 More specifically, an error instance is ABI-encoded in the same way as
 a function call to a function of the same name and types would be
@@ -60,3 +63,10 @@ it is a built-in type.
 
 Similarly, a failing ``assert`` or similar conditions will revert with an error
 of the built-in type ``Panic(uint256)``.
+
+.. note::
+    Error data should only be used to give an indication of failure, but
+    not as a means for control-flow. The reason is that the revert data
+    of inner calls is "handed up" by default. This means that an inner call
+    can "forge" revert data that looks like it could have come from the
+    contract that called it.

@@ -519,9 +519,15 @@ reverts with a custom error of "insufficient balance":
     }
 
 The return data would be encoded in the same way as the function call
-``InsufficientBalance(0, amount)``, i.e. ``0xcf479181``, ``uint256(0)``, ``amount``.
+``InsufficientBalance(0, amount)`` to the function ``InsufficientBalance(uint256,uint256)``,
+i.e. ``0xcf479181``, ``uint256(0)``, ``uint256(amount)``.
 
 The error selectors ``0x00000000`` and ``0xffffffff`` are reserved for future use.
+
+Note that since error data in inner calls is just "handed up", it can happen that
+a smart contract causes errors that are not defined in the contract itself or
+any of its files. Furthermore, never trust error data because it can be "forged"
+in an inner call.
 
 .. _abi_json:
 
@@ -575,6 +581,11 @@ Errors look as follows:
   * ``name``: the name of the parameter.
   * ``type``: the canonical type of the parameter (more below).
   * ``components``: used for tuple types (more below).
+
+.. note::
+  There can be multiple errors with the same name and even with identical signature
+  in the JSON array, for example if the errors originate from different
+  files in the smart contract.
 
 
 For example,
