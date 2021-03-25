@@ -38,6 +38,19 @@ To realize this in the EVM, code of internal library functions
 and all functions called from therein will at compile time be included in the calling
 contract, and a regular ``JUMP`` call will be used instead of a ``DELEGATECALL``.
 
+.. note::
+    Public library functions, unlike public functions inherited from contracts, cannot be
+    called internally from the outside of the library.
+    This is because the same syntax (i.e. ``L.f()`` where ``L`` is the library name) is used for both
+    internal and external calls and the meaning depends on how the function is defined.
+    For external, internal and private functions there is no ambiguity.
+    For public ones both calling conventions are valid and the compiler resolves the situation by
+    always choosing the external calling convention.
+
+    There is no such ambiguity in case of contracts because an external call requires a contract
+    instance.
+    ``C.f()``, where ``C`` is a name of a contract type, is always an internal call.
+
 .. index:: using for, set
 
 The following example illustrates how to use libraries (but using a manual method,
