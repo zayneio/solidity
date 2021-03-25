@@ -828,7 +828,7 @@ the ``dup`` and ``swap`` instructions as well as ``jump`` instructions, labels a
 | extcodehash(a)          |     | C | code hash of address a                                          |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | create(v, p, n)         |     | F | create new contract with code mem[p...(p+n)) and send v wei     |
-|                         |     |   | and return the new address                                      |
+|                         |     |   | and return the new address; returns 0 on error                  |
 +-------------------------+-----+---+-----------------------------------------------------------------+
 | create2(v, p, n, s)     |     | C | create new contract with code mem[p...(p+n)) at address         |
 |                         |     |   | keccak256(0xff . this . s . keccak256(mem[p...(p+n)))           |
