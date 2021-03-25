@@ -100,7 +100,7 @@ rules explicit::
     uint8 e = uint8(bytes1(a)); // e will be 0x12
 
 ``bytes`` arrays and ``bytes`` calldata slices can be converted explicitly to fixed bytes types(``bytes1``/.../``bytes32``).
-In case the array is longer than the target fixed bytes type, a panic will happen.
+In case the array is longer than the target fixed bytes type, result will be truncated from the right side.
 If the array is shorter than the target type, it will be padded with zeros at the end.
 
 ::

@@ -3349,13 +3349,12 @@ string YulUtilFunctions::bytesToFixedBytesConversionFunction(ArrayType const& _f
 		_returnParams = {"value"};
 		Whiskers templ(R"(
 			let length := <arrayLen>(array<?fromCalldata>, len</fromCalldata>)
-			if gt(length, <fixedBytesLen>) { <panic>() }
 			let dataArea := array
 			<?fromMemory>
 				dataArea := <dataArea>(array)
 			</fromMemory>
 			<?fromStorage>
-				if eq(length, 32) { dataArea := <dataArea>(array) }
+				if gt(length, 31) { dataArea := <dataArea>(array) }
 			</fromStorage>
 
 			<?fromCalldata>
@@ -3377,7 +3376,6 @@ string YulUtilFunctions::bytesToFixedBytesConversionFunction(ArrayType const& _f
 		templ("fromCalldata", fromCalldata);
 		templ("arrayLen", arrayLengthFunction(_from));
 		templ("fixedBytesLen", to_string(_to.numBytes()));
-		templ("panic", panicFunction(PanicCode::FixedBytesConversionError));
 		templ("fromMemory", _from.dataStoredIn(DataLocation::Memory));
 		templ("fromStorage", _from.dataStoredIn(DataLocation::Storage));
 		templ("dataArea", arrayDataAreaFunction(_from));
