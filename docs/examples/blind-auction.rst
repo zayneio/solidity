@@ -96,7 +96,7 @@ to receive their money - contracts cannot activate themselves.
             // will revert all changes in this
             // function execution including
             // it having received the money).
-            if (msg.value >= highestBid)
+            if (msg.value <= highestBid)
                 revert BidNotHighEnough(highestBid);
 
             if (highestBid != 0) {
@@ -147,7 +147,7 @@ to receive their money - contracts cannot activate themselves.
             // external contracts.
 
             // 1. Conditions
-            if (block.timestamp > auctionEndTime)
+            if (block.timestamp < auctionEndTime)
                 revert AuctionNotYetEnded();
             if (ended)
                 revert AuctionEndAlreadyCalled();
