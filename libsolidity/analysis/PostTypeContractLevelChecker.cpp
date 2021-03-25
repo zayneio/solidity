@@ -45,13 +45,15 @@ bool PostTypeContractLevelChecker::check(ContractDefinition const& _contract)
 	solAssert(
 		_contract.annotation().creationCallGraph.set() &&
 		_contract.annotation().deployedCallGraph.set(),
-	"" );
+		""
+	);
 
 	map<uint32_t, map<string, SourceLocation>> errorHashes;
 	for (ErrorDefinition const* error: _contract.interfaceErrors())
 	{
 		string signature = error->functionType(true)->externalSignature();
 		uint32_t hash = selectorFromSignature32(signature);
+		// Fail if there is a different signature for the same hash.
 		if (!errorHashes[hash].empty() && !errorHashes[hash].count(signature))
 		{
 			SourceLocation& otherLocation = errorHashes[hash].begin()->second;
@@ -59,7 +61,7 @@ bool PostTypeContractLevelChecker::check(ContractDefinition const& _contract)
 				4883_error,
 				error->nameLocation(),
 				SecondarySourceLocation{}.append("This error has a different signature but the same hash: ", otherLocation),
-				string("Error signature hash collision for ") + error->functionType(true)->externalSignature()
+				"Error signature hash collision for " + error->functionType(true)->externalSignature()
 			);
 		}
 		else

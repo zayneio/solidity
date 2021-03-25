@@ -175,12 +175,14 @@ vector<EventDefinition const*> const& ContractDefinition::interfaceEvents() cons
 	});
 }
 
-vector<ErrorDefinition const*> ContractDefinition::interfaceErrors() const
+vector<ErrorDefinition const*> ContractDefinition::interfaceErrors(bool _requireCallGraph) const
 {
 	set<ErrorDefinition const*, CompareByID> result;
 	for (ContractDefinition const* contract: annotation().linearizedBaseContracts)
 		result += filteredNodes<ErrorDefinition>(contract->m_subNodes);
 	solAssert(annotation().creationCallGraph.set() == annotation().deployedCallGraph.set(), "");
+	if (_requireCallGraph)
+		solAssert(annotation().creationCallGraph.set(), "");
 	if (annotation().creationCallGraph.set())
 	{
 		result += (*annotation().creationCallGraph)->usedErrors;
