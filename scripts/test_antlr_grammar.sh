@@ -107,6 +107,16 @@ test_file()
   fi
 }
 
+# Also exclude files that are placed within a directory,
+# where its name is starting with '_' (e.g. for external sources used in semantic tests).
+EXCLUDE_FILES=()
+for EXTERNAL_SOURCE in $(find test/libsolidity/semanticTests | grep "/_")
+do
+  EXCLUDE_FILES+=( "${EXTERNAL_SOURCE}" )
+done
+EXCLUDE_FILES_JOINED=$(printf "%s\|" "${EXCLUDE_FILES[@]}")
+EXCLUDE_FILES_JOINED=${EXCLUDE_FILES_JOINED%??}
+
 # we only want to use files that do not contain excluded parser errors, analysis errors or multi-source files.
 SOL_FILES=()
 while IFS='' read -r line
@@ -119,7 +129,8 @@ done < <(
     "${ROOT_DIR}/test/libsolidity/semanticTests" |
       grep -v -E 'syntaxTests/parsing/import_empty.sol' |
       grep -v -E 'comments/.*_direction_override.*.sol' |
-      grep -v -E 'literals/.*_direction_override.*.sol'
+      grep -v -E 'literals/.*_direction_override.*.sol' |
+      grep -v "${EXCLUDE_FILES_JOINED}"
       # Skipping the unicode tests as I couldn't adapt the lexical grammar to recursively counting RLO/LRO/PDF's.
 )
 
